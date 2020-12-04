@@ -11,8 +11,10 @@ var evict = function() {
   var now = Date.now();
   var limit = now - TIME_LIMIT;
   for (var [key, entry] of Object.entries(storage)) {
-    if (entry.time < limit) delete storage[key];
-    console.log("Evicted entry for key ", key);
+    if (entry.time < limit) {
+      delete storage[key];
+      console.log("Evicted entry for key ", key);
+    }
   }
 }
 
@@ -21,6 +23,7 @@ app.get("/", (request, response) => {
 });
 
 app.get("/:key", (request, response) => {
+  console.log(`Got request for key ${request.params.key}`);
   response.set("Access-Control-Allow-Origin", "*");
   var entry = storage[request.params.key];
   if (!entry) return response.status(404).send("No entry for that key");
@@ -47,11 +50,12 @@ app.post("/new", (request, response) => {
   request.on("end", function() {
     var value = Buffer.concat(body);
     var key = getKey();
+    console.log(`Storing ${value.length} bytes as ${key}`);
     storage[key] = { time, value };
     response.send({ key });
   })
 });
 
-const listener = app.listen(process.env.PORT, () => {
+const listener = app.listen(8082, () => {
   console.log("Your app is listening on port " + listener.address().port);
 });
